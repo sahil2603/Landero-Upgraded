@@ -44,6 +44,24 @@
   addEventListener('resize', onScroll); onScroll();
   if (top) top.addEventListener('click', function () { scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); });
 
+  /* every card animates in, staggered across its row */
+  $$('.card, .tier').forEach(function (el) { if (!el.classList.contains('rv') && !el.closest('.rv')) el.classList.add('rv'); });
+  $$('.offers, .steps, .split, .ladder, .podium').forEach(function (g) { $$(':scope > .rv', g).forEach(function (el, i) { el.classList.add('s' + Math.min(4, i % 5)); }); });
+
+  /* 3D tilt + light glare on cards (desktop pointer only) */
+  if (fine && !reduce) $$('.card, .pod, .tier').forEach(function (el) {
+    if (el.querySelector('input, select, textarea, iframe') || el.classList.contains('lbt') || el.classList.contains('ranks')) return;
+    el.classList.add('mv'); var g = document.createElement('span'); g.className = 'glare'; g.setAttribute('aria-hidden', 'true'); el.appendChild(g);
+    var max = el.classList.contains('banner') || el.offsetWidth > 700 ? 3 : 7;
+    el.addEventListener('pointermove', function (e) {
+      var r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      el.classList.add('hov');
+      el.style.transform = 'perspective(1000px) rotateX(' + (-y * max).toFixed(2) + 'deg) rotateY(' + (x * max).toFixed(2) + 'deg) translateY(-4px)';
+      el.style.setProperty('--gx', (e.clientX - r.left) + 'px'); el.style.setProperty('--gy', (e.clientY - r.top) + 'px');
+    });
+    el.addEventListener('pointerleave', function () { el.classList.remove('hov'); el.style.transform = ''; });
+  });
+
   /* reveal on scroll (content visible by default) */
   if ('IntersectionObserver' in window && !reduce) {
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { if (e.boundingClientRect.top > innerHeight * .1) e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .1 });
